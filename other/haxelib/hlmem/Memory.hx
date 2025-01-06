@@ -783,6 +783,7 @@ class Memory {
 
 		inline function isVirtualField(t) { t >>>= 24; return t == 1 || t == 2; }
 
+		var loopCount = 0;
 
 		for( b in filteredBlocks )
 			if( b.type != null && b.type.match(lt) ) {
@@ -795,7 +796,12 @@ class Memory {
 				if( owner != null ) {
 					tl.push(owner.makeTID(b,displayFields == Full));
 					var k : Int = up;
+					var sequenceRemoves = 0;
 					while( owner.owner != null && k-- > 0 && owner.owner != all ) {
+						if (sequenceRemoves > 1000) {
+							loopCount++;
+							break;
+						}
 						var tag = owner.owner.makeTID(owner,displayFields != None);
 						owner = owner.owner;
 						// remove recursive sequence
@@ -810,6 +816,7 @@ class Memory {
 									for( k in 0...i ) tl.shift();
 									tag = -1;
 									k += i + 1;
+									sequenceRemoves++;
 								}
 								break;
 							}
@@ -826,6 +833,9 @@ class Memory {
 			}
 
 		ctx.print();
+		if (loopCount > 0) {
+			trace(withColor('Had to break locate early on $loopCount paths because of loop', 31));
+		}
 		return ctx;
 	}
 
